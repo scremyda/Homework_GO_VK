@@ -2,7 +2,7 @@ package utilities
 
 import (
 	"bufio"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 )
@@ -15,7 +15,7 @@ func ReadLines(reader io.Reader) ([]string, error) {
 		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
-		err = fmt.Errorf("error while reading data")
+		err = errors.New("error while reading data")
 		return nil, err
 	}
 	return lines, nil

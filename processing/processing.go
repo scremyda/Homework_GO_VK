@@ -1,8 +1,6 @@
 package uniq
 
 import (
-	"flag"
-	"fmt"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -17,61 +15,51 @@ type Options struct {
 	IFlagStated bool
 }
 
-func SetArgs() (Options, error) {
-	var options Options
+type CountOptions struct {
+	line  string
+	count int
+}
 
-	flag.BoolVar(&options.CFlagStated, "c", false, "Сount the number of occurrences of a string and"+
-		" print this number before the string separated by a space.")
-	flag.BoolVar(&options.DFlagStated, "d", false, "Output only those lines that are repeated "+
-		"in the input data.")
-	flag.BoolVar(&options.UFlagStated, "u", false, "Output only those lines that are not "+
-		"repeated in the input data.")
-	flag.IntVar(&options.FFlagStated, "f", 0, "Ignore the first numFields of fields in a row. "+
-		"A field in a string is a non-empty set of characters separated by a space.")
-	flag.IntVar(&options.SFlagStated, "s", 0, "Ignore the first numFields of fields in a row. "+
-		"A field in a string is a non-empty set of characters separated by a space.")
-	flag.BoolVar(&options.IFlagStated, "i", false, "Ignore the case of letters.")
-
-	flag.Parse()
-
-	if (options.CFlagStated && options.DFlagStated) ||
-		(options.CFlagStated && options.UFlagStated) ||
-		(options.DFlagStated && options.UFlagStated) {
-		err := fmt.Errorf("parameters 'c', 'd' and 'u' cannot be used at the same time")
-		fmt.Println("Use Case: uniq [-c | -d | -u] [-i] [-f num] [-s chars] [input_file [output_file]]")
-		flag.PrintDefaults()
-		return options, err
-	} else if options.SFlagStated < 0 || options.FFlagStated < 0 {
-		err := fmt.Errorf("num_fields or num_chars cannot be negative")
-		fmt.Println("Use Case: uniq [-c | -d | -u] [-i] [-f num] [-s chars] [input_file [output_file]]")
-		flag.PrintDefaults()
-		return options, err
-	}
-
-	return options, nil
+func comparisonStrings(lineOne, lineTwo string) bool {
+	return lineOne == lineTwo
 }
 
 func (options Options) LinesProcessing(lines []string) []string {
 	var processedLines []string
 	comparisonFunction := comparisonStrings
-	if options.IFlagStated {
-		comparisonFunction = strings.EqualFold
-	}
+
 	if options.CFlagStated {
-		processedLines = cFlagLinesProcessing(lines)
+		for _, value := range uniq(lines, options.FFlagStated, options.SFlagStated, comparisonFunction) {
+			processedLines = append(processedLines, strconv.Itoa(value.count)+" "+value.line)
+		}
 	} else if options.DFlagStated {
-		processedLines = dFlagLinesProcessing(lines)
+		for _, value := range uniq(lines, options.FFlagStated, options.SFlagStated, comparisonFunction) {
+			if value.count > 1 {
+				processedLines = append(processedLines, value.line)
+			}
+		}
 	} else if options.UFlagStated {
-		processedLines = uFlagLinesProcessing(lines)
+		for _, value := range uniq(lines, options.FFlagStated, options.SFlagStated, comparisonFunction) {
+			if value.count == 1 {
+				processedLines = append(processedLines, value.line)
+			}
+		}
+	} else if options.IFlagStated {
+		comparisonFunction = strings.EqualFold
+		for _, value := range uniq(lines, options.FFlagStated, options.SFlagStated, comparisonFunction) {
+			processedLines = append(processedLines, value.line)
+		}
 	} else {
-		processedLines = otherFlagsStatedProcessing(lines, options.FFlagStated, options.SFlagStated, comparisonFunction)
+		for _, value := range uniq(lines, options.FFlagStated, options.SFlagStated, comparisonFunction) {
+			processedLines = append(processedLines, value.line)
+		}
 	}
 
 	return processedLines
 }
 
-func otherFlagsStatedProcessing(linesWithoutNumFieldsAndChars []string, numFields int, numChars int,
-	stringsComparison func(lineOne, lineTwo string) bool) []string {
+func uniq(linesWithoutNumFieldsAndChars []string, numFields int, numChars int,
+	stringsComparison func(lineOne, lineTwo string) bool) []CountOptions {
 	space := ""
 	if numFields != 0 {
 		space = " "
@@ -92,68 +80,22 @@ func otherFlagsStatedProcessing(linesWithoutNumFieldsAndChars []string, numField
 		}
 	}
 
-	var processedLines []string
-	for index, value := range linesWithoutNumFieldsAndChars {
-		if index == 0 || !stringsComparison(linesWithoutNumFieldsAndChars[index-1], value) {
-			processedLines = append(processedLines, linesWithNumFieldsAndChars[index]+value)
-		}
-	}
-
-	return processedLines
-}
-func comparisonStrings(lineOne, lineTwo string) bool {
-	return lineOne == lineTwo
-}
-
-func uFlagLinesProcessing(lines []string) []string {
-	var processedLines []string
 	count := 1
-	for i := 1; i < len(lines); i++ {
-		if lines[i-1] != lines[i] {
-			if count == 1 {
-				processedLines = append(processedLines, lines[i-1])
-			}
+	var processedLines []CountOptions
+	var index int
+	for index = 1; index < len(linesWithoutNumFieldsAndChars); index++ {
+		if !stringsComparison(linesWithoutNumFieldsAndChars[index-1], linesWithoutNumFieldsAndChars[index]) {
+			processedLines = append(processedLines, CountOptions{linesWithNumFieldsAndChars[index-count] +
+				linesWithoutNumFieldsAndChars[index-count], count})
 			count = 1
 		} else {
 			count++
 		}
 	}
-
 	if count == 1 {
-		processedLines = append(processedLines, lines[len(lines)-1])
+		processedLines = append(processedLines, CountOptions{linesWithNumFieldsAndChars[index-count] +
+			linesWithoutNumFieldsAndChars[index-count], count})
 	}
-
-	return processedLines
-}
-
-func dFlagLinesProcessing(lines []string) []string {
-	var processedLines []string
-	count := 0
-	for i := 1; i < len(lines); i++ {
-		if lines[i-1] == lines[i] && count == 0 {
-			processedLines = append(processedLines, lines[i])
-			count++
-		} else {
-			count = 0
-		}
-	}
-
-	return processedLines
-}
-
-func cFlagLinesProcessing(lines []string) []string {
-	count := 1
-	var processedLines []string
-	for i := 1; i < len(lines); i++ {
-		if lines[i-1] != lines[i] {
-			processedLines = append(processedLines, strconv.Itoa(count)+" "+lines[i-1])
-			count = 1
-		} else {
-			count++
-		}
-	}
-
-	processedLines = append(processedLines, strconv.Itoa(count)+" "+lines[len(lines)-1])
 
 	return processedLines
 }

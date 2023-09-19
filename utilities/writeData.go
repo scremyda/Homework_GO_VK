@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -14,7 +15,7 @@ func WriteData(outputFile *os.File, processedLines []string) error {
 		for _, line := range processedLines {
 			_, err := outputFile.WriteString(line + "\n")
 			if err != nil {
-				err = fmt.Errorf("error while writing data")
+				err = errors.New("error while writing data")
 				return err
 			}
 		}

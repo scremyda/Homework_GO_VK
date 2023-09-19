@@ -4,12 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"uniq/processing"
 	"uniq/utilities"
 )
 
 func main() {
-	options, err := uniq.SetArgs()
+	options, err := utilities.SetArgs()
 
 	if err != nil {
 		fmt.Println("Error happened: ", err)
@@ -49,10 +48,6 @@ func main() {
 				}
 			}()
 		}
-	} else if len(argsWithoutFlags) > 2 {
-		fmt.Printf("Too many args are given: %d\nCheck usage case: uniq [-c | -d | -u] [-i] [-f num] "+
-			"[-s chars] [input_file [output_file]]\n", len(argsWithoutFlags))
-		return
 	}
 	inputData, err := utilities.GetData(inputFile)
 	if err != nil {

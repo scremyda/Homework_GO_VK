@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"uniq/processing"
 	"uniq/utilities"
 )
 
@@ -18,21 +19,23 @@ func main() {
 
 	inputFile, outputFile := utilities.OpenFiles(argsWithoutFlags)
 
-	defer func() {
-		if err = inputFile.Close(); err != nil {
-			err = fmt.Errorf("error closing file: %s", argsWithoutFlags[0])
-			fmt.Println("Error happened while closing file: ", err)
-			return
-		}
-	}()
+	if inputFile != nil {
+		defer func() {
+			if err = inputFile.Close(); err != nil {
+				err = fmt.Errorf("error closing file: %s", argsWithoutFlags[0])
+				fmt.Println("Error happened while closing input file: ", err)
+			}
+		}()
+	}
 
-	defer func() {
-		if err = outputFile.Close(); err != nil {
-			err = fmt.Errorf("error closing file: %s", argsWithoutFlags[1])
-			fmt.Println("Error happened while closing file: ", err)
-			return
-		}
-	}()
+	if outputFile != nil {
+		defer func() {
+			if err = outputFile.Close(); err != nil {
+				err = fmt.Errorf("error closing file: %s", argsWithoutFlags[1])
+				fmt.Println("Error happened while closing output file: ", err)
+			}
+		}()
+	}
 
 	inputData, err := utilities.GetData(inputFile)
 	if err != nil {
@@ -40,7 +43,7 @@ func main() {
 		return
 	}
 
-	processedLines := options.LinesProcessing(inputData)
+	processedLines := uniq.LinesProcessing(options, inputData)
 
 	err = utilities.WriteData(outputFile, processedLines)
 	if err != nil {

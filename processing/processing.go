@@ -24,7 +24,7 @@ func comparisonStrings(lineOne, lineTwo string) bool {
 	return lineOne == lineTwo
 }
 
-func (options Options) LinesProcessing(lines []string) []string {
+func LinesProcessing(options Options, lines []string) []string {
 	var processedLines []string
 	comparisonFunction := comparisonStrings
 
@@ -60,11 +60,8 @@ func (options Options) LinesProcessing(lines []string) []string {
 
 func uniq(linesWithoutNumFieldsAndChars []string, numFields int, numChars int,
 	stringsComparison func(lineOne, lineTwo string) bool) []CountOptions {
-	space := ""
-	if numFields != 0 {
-		space = " "
-	}
 
+	var space string
 	linesWithNumFieldsAndChars := make([]string, len(linesWithoutNumFieldsAndChars))
 	for index, value := range linesWithoutNumFieldsAndChars {
 		fields := strings.Fields(value)
@@ -72,6 +69,11 @@ func uniq(linesWithoutNumFieldsAndChars []string, numFields int, numChars int,
 			linesWithNumFieldsAndChars[index] = value
 			linesWithoutNumFieldsAndChars[index] = ""
 		} else {
+			if len(strings.Join(fields[numFields:], " ")[numChars:]) == 0 {
+				space = ""
+			} else if numFields != 0 {
+				space = " "
+			}
 			linesWithNumFieldsAndChars[index] = strings.Join(fields[:numFields], " ") +
 				space +
 				strings.Join(fields[numFields:], " ")[:numChars]
@@ -92,10 +94,8 @@ func uniq(linesWithoutNumFieldsAndChars []string, numFields int, numChars int,
 			count++
 		}
 	}
-	if count == 1 {
-		processedLines = append(processedLines, CountOptions{linesWithNumFieldsAndChars[index-count] +
-			linesWithoutNumFieldsAndChars[index-count], count})
-	}
+	processedLines = append(processedLines, CountOptions{linesWithNumFieldsAndChars[index-count] +
+		linesWithoutNumFieldsAndChars[index-count], count})
 
 	return processedLines
 }

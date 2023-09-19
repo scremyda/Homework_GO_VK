@@ -18,7 +18,6 @@ func main() {
 	argsWithoutFlags := flag.Args()
 
 	inputFile, outputFile := utilities.OpenFiles(argsWithoutFlags)
-
 	if inputFile != nil {
 		defer func() {
 			if err = inputFile.Close(); err != nil {

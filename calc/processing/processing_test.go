@@ -40,6 +40,12 @@ func TestCalc(t *testing.T) {
 		{"5/0", nil},
 		{"0/0+100*100", nil},
 		{"(545*11848+104*948+0.1)/0", nil},
+		{"ffffffffffffff", nil},
+		{"(1+1", nil},
+		{"77*0+20)", nil},
+		{"11*A+200/(134+0.1)", nil},
+		{"A+B*2/C", nil},
+		{"7*Q", nil},
 	}
 	for _, test := range calcTestFloat {
 		result, _ := Calc(test.inputLine)

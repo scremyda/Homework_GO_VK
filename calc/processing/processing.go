@@ -14,10 +14,10 @@ func containsOnlyValidSymbols(line string) bool {
 }
 
 func calculateInterfaces(left, right interface{}, operator string) interface{} {
-	leftFloat, leftIsFloat := left.(float64)
-	rightFloat, rightIsFloat := right.(float64)
+	leftFloat, leftOk := left.(float64)
+	rightFloat, rightOk := right.(float64)
 
-	if leftIsFloat && rightIsFloat {
+	if leftOk && rightOk {
 		switch operator {
 		case "+":
 			return leftFloat + rightFloat
@@ -103,13 +103,20 @@ func Calc(inputLine string) (interface{}, error) {
 				i++
 			}
 			i--
-			floatValue, _ := strconv.ParseFloat(operand, 64)
+			floatValue, err := strconv.ParseFloat(operand, 64)
+			if err != nil {
+				return nil, err
+			}
 			stackNumbers.Push(floatValue)
 		}
 	}
 	for !stackOperations.IsEmpty() {
 		processOperations(stackNumbers, stackOperations.Peek())
 		stackOperations.Pop()
+	}
+	if stackNumbers.Peek() == nil {
+		err := errors.New("expression is not written correctly")
+		return nil, err
 	}
 	return stackNumbers.Peek(), nil
 }

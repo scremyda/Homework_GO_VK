@@ -18,22 +18,25 @@ func main() {
 	argsWithoutFlags := flag.Args()
 
 	inputFile, outputFile := utilities.OpenFiles(argsWithoutFlags)
-	if inputFile != nil {
-		defer func() {
-			if err = inputFile.Close(); err != nil {
-				err = fmt.Errorf("error closing file: %s", argsWithoutFlags[0])
-				fmt.Println("Error happened while closing input file: ", err)
-			}
-		}()
+	if len(argsWithoutFlags) > 0 {
+		if inputFile != nil {
+			defer func() {
+				if err = inputFile.Close(); err != nil {
+					err = fmt.Errorf("error closing file: %s", argsWithoutFlags[0])
+					fmt.Println("Error happened while closing input file: ", err)
+				}
+			}()
+		}
 	}
-
-	if outputFile != nil {
-		defer func() {
-			if err = outputFile.Close(); err != nil {
-				err = fmt.Errorf("error closing file: %s", argsWithoutFlags[1])
-				fmt.Println("Error happened while closing output file: ", err)
-			}
-		}()
+	if len(argsWithoutFlags) == 2 {
+		if outputFile != nil {
+			defer func() {
+				if err = outputFile.Close(); err != nil {
+					err = fmt.Errorf("error closing file: %s", argsWithoutFlags[1])
+					fmt.Println("Error happened while closing output file: ", err)
+				}
+			}()
+		}
 	}
 
 	inputData, err := utilities.GetData(inputFile)

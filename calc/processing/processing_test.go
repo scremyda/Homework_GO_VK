@@ -1,6 +1,7 @@
 package processing
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -35,24 +36,24 @@ func TestCalc(t *testing.T) {
 
 	var calcTestErrors = []struct {
 		inputLine string
-		answer    interface{}
+		err       error
 	}{
-		{"5/0", nil},
-		{"0/0+100*100", nil},
-		{"(545*11848+104*948+0.1)/0", nil},
-		{"ffffffffffffff", nil},
-		{"(1+1", nil},
-		{"77*0+20)", nil},
-		{"11*A+200/(134+0.1)", nil},
-		{"A+B*2/C", nil},
-		{"7*Q", nil},
+		{"5/0", errors.New("expression is not written correctly")},
+		{"0/0+100*100", errors.New("expression is not written correctly")},
+		{"(545*11848+104*948+0.1)/0", errors.New("expression is not written correctly")},
+		{"ffffffffffffff", errors.New("invalid symbols are given")},
+		{"(1+1", errors.New("expression is not written correctly")},
+		{"77*0+20)", errors.New("expression is not written correctly")},
+		{"11*A+200/(134+0.1)", errors.New("invalid symbols are given")},
+		{"A+B*2/C", errors.New("invalid symbols are given")},
+		{"7*Q", errors.New("invalid symbols are given")},
 	}
 	for _, test := range calcTestFloat {
 		result, _ := Calc(test.inputLine)
 		assert.Equal(t, test.answer, result)
 	}
 	for _, test := range calcTestErrors {
-		result, _ := Calc(test.inputLine)
-		assert.Equal(t, test.answer, result)
+		_, err := Calc(test.inputLine)
+		assert.Equal(t, test.err, err)
 	}
 }

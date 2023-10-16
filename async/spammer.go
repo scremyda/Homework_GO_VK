@@ -23,7 +23,7 @@ func worker(wg *sync.WaitGroup, command cmd, in, out chan interface{}) {
 		close(out)
 		wg.Done()
 	}()
-	
+
 	command(in, out)
 }
 
@@ -86,6 +86,10 @@ func SelectMessages(in, out chan interface{}) {
 		userObject, ok = <-in
 		if ok {
 			user, ok = userObject.(User)
+			if !ok {
+				fmt.Println("Error happened in SelectMessages in type assertion")
+				return
+			}
 			batchUsers = append(batchUsers, user)
 		}
 
